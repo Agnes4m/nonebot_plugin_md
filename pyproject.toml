@@ -1,0 +1,15 @@
+[project]
+name = "nonebot_plugin_md"
+version = "0.1.0"
+description = "muse dash for nonebot2"
+authors = [
+    {name = "Agnes Digital", email = "Z735803792@163.com"},
+]
+dependencies = []
+requires-python = ">=3.9"
+readme = "README.md"
+license = {text = "AGPL-3.0"}
+
+[build-system]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
