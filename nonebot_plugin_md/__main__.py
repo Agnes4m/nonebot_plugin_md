@@ -1,27 +1,32 @@
-from nonebot import on_shell_command
+from nonebot import on_command
 from nonebot.matcher import Matcher
-from .message import help_message
-from nonebot.rule import ArgumentParser
-from nonebot.rule import ArgumentParser, Namespace
-from typing import List, Optional
-from nonebot import logger, on_command, on_shell_command
-from nonebot.matcher import Matcher
-from nonebot.params import Arg, ArgPlainText, CommandArg, ShellCommandArgs
+from nonebot.params import CommandArg, RawCommand, CommandStart
+from nonebot.adapters import Event, Message
+from nonebot_plugin_saa import Image, MessageFactory
+from .b30 import mdbot
+from .config import config
 
-from nonebot.typing import T_State
-from nonebot_plugin_saa import Image, MessageFactory, MessageSegmentFactory, Text
-
-cmd_generate_parser = ArgumentParser("md")
-cmd_generate = on_shell_command(
-    "md",
-    parser=cmd_generate_parser,
-    aliases={"喵斯快跑"},
-    priority=2,
-)
+command = {"md"}
+if config.is_b30:
+    command = {"b30", "md"}
+cmd = on_command("喵斯快跑", aliases=command, priority=2)
 
 
-@cmd_generate.handle()
-async def _(matcher: Matcher, args: Namespace = ShellCommandArgs()):
-    texts: List[str] = args.text
-    if texts[0] == "update":
-        ...
+@cmd.handle()
+async def _(
+    matcher: Matcher,
+    event: Event,
+    args: Message = CommandArg(),
+    start=CommandStart(),
+    raw=RawCommand(),
+):
+    args_msg = args.extract_plain_text()
+    keyword = raw.replace(start, "").replace(args_msg, "")
+
+    if keyword == "b30":
+        args_msg = "md b30" + args_msg
+    msg = await mdbot(event.get_user_id(), args_msg)
+    if isinstance(msg, str):
+        await matcher.finish(msg)
+    else:
+        await MessageFactory([Image(msg)]).send()

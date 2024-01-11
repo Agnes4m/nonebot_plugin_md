@@ -5,8 +5,24 @@ description = "muse dash for nonebot2"
 authors = [
     {name = "Agnes Digital", email = "Z735803792@163.com"},
 ]
-dependencies = []
-requires-python = ">=3.9"
+dependencies = [
+    "nonebot2>=2.1.1",
+    "nonebot-plugin-send-anything-anywhere>=0.3.2",
+    "aiohttp>=3.8.1",
+    "fuzzywuzzy>=0.18.0",
+    "lxml>=4.9.1"
+]
+requires-python = ">=3.9,<=3.12"
+keywords = ["md", "nonebot2", "plugin"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+]
 readme = "README.md"
 license = {text = "AGPL-3.0"}
 

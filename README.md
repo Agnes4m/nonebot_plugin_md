@@ -33,23 +33,14 @@ _✨游戏慕斯快跑(muse dash)查询✨_
 
 使用从MuseDash.moe摸来的数据及api开发的喵斯查分bot，可以实现绑定qq和md账号、查询b30、查询曲目信息、查询难度排行等功能
 
+支持nonebot_plugin_saa所支持的所有适配器
+
 ## 安装
 
 以下提到的方法 任选**其一** 即可
 
 <details open>
-<summary>[个人推荐] 使用 nb-cli 安装</summary>
-在 nonebot2 项目插件文件夹中，输入以下指令克隆项目，并安装相关依赖(如果有虚拟环境，pip安装依赖需要进虚拟环境再安装，或者参考下方包管理器安装方法)
-
-```bash
-https://github.com/Agnes4m/nonebot_plugin_md
-pip install --no-install nonebot_plugin_md 
-```
-
-</details>
-
-<details open>
-<summary>[新手推荐] 使用 nb-cli 安装</summary>
+<summary>[推荐] 使用 nb-cli 安装</summary>
 在 nonebot2 项目的根目录下打开命令行, 输入以下指令即可安装
 
 ```bash
@@ -97,6 +88,10 @@ conda install nonebot-plugin-l4d2-server
 </details>
 
 ## 主要功能
+
+- 1. 初始化 发送`md update`
+- 2. 绑定 发送`md bindname xxx` 或者 `md binduid xxx`
+- 3. b30
 
 ## 其他
 
