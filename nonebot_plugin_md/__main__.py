@@ -6,10 +6,9 @@ from nonebot_plugin_saa import Image, MessageFactory
 from .b30 import mdbot
 from .config import config
 
-command = {"md"}
 if config.is_b30:
-    command = {"b30", "md"}
-cmd = on_command("喵斯快跑", aliases=command, priority=2)
+    b30 = on_command("b30", priority=1)
+cmd = on_command("md", priority=2)
 
 
 @cmd.handle()
@@ -25,6 +24,21 @@ async def _(
 
     if keyword == "b30":
         args_msg = "md b30" + args_msg
+    msg = await mdbot(event.get_user_id(), args_msg)
+    if isinstance(msg, str):
+        await matcher.finish(msg)
+    else:
+        await MessageFactory([Image(msg)]).send()
+
+
+@b30.handle()
+async def _(
+    matcher: Matcher,
+    event: Event,
+    args: Message = CommandArg(),
+):
+    args_msg = args.extract_plain_text()
+    args_msg = "md b30" + args_msg
     msg = await mdbot(event.get_user_id(), args_msg)
     if isinstance(msg, str):
         await matcher.finish(msg)

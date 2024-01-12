@@ -10,6 +10,7 @@ help_message = """/md update:更新曲库及难度表，首次使用需要更新
     数据来源：MuseDash.moe
     by AgnesDigital & Nonebot2"""
 
+base_url = "https://musedash.moe"
 dif_url = "https://api.musedash.moe/diffdiff"
 albums_url = "https://api.musedash.moe/albums"
 search_url = "https://api.musedash.moe/search/"

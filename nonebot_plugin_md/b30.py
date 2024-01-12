@@ -1,6 +1,7 @@
 import requests as requests
 from lxml import etree
 import json
+import io
 from fuzzywuzzy import fuzz, process
 from .message import (
     player_url,
@@ -9,11 +10,17 @@ from .message import (
     search_url,
     json_path,
     help_message,
+    base_url,
 )
 from pathlib import Path
 from .utils import url_to_msg
+from .image import b30_image
 
 data_path = Path("data/md_data")
+
+# //*[@id="app"]/section/div/div/div/nav[2]/div[1]/figure/img
+# //*[@id="app"]/section/div/div/div/nav[3]/div[1]/figure/img
+# /html/body/div/section/div/div/div/nav[2]/div[1]/figure/img
 
 
 async def b30(md_uid):
@@ -26,7 +33,6 @@ async def b30(md_uid):
     )[0].text
     ptt = ptt.replace(" ", "")
     ptt = ptt.replace("\n", "")
-
     songs = {}
     num = 1
     for i in range(len(spans)):
@@ -57,6 +63,11 @@ async def b30(md_uid):
         info["dif"] = song_dif
         info["acc"] = song_acc
         info["ptt"] = 0
+        pic = tree.xpath(
+            f"/html/body/div/section/div/div/div/nav[{i+1}]/div[1]/figure/img"
+        )[0].get("src")
+        pic_url = base_url + pic
+        info["pic"] = pic_url
         songs[num] = info
         num += 1
 
@@ -78,18 +89,26 @@ async def b30(md_uid):
 
         songs[song]["acc"] = "{:.2%}".format(songs[song]["acc"])
         songs[song]["diffdiff"] = "{:.2f}".format(songs[song]["diffdiff"])
+    print(songs)
     songs = sorted(songs.items(), key=lambda x: x[1]["ptt"], reverse=True)
+    print(songs)
+    # 文字输出
+    # message = await uid2name(md_uid)
+    # message += "\n"
+    # message += ptt
+    # for i in range(30):
+    #     if i >= len(songs):
+    #         break
+    #     message += "\n{0}({1}) {2}".format(
+    #         songs[i][1]["name"], songs[i][1]["diffdiff"], songs[i][1]["acc"]
+    #     )
+    # message += "\npower by Agnes4m & moe & Nonebot2"
 
-    message = await uid2name(md_uid)
-    message += "\n"
-    message += ptt
-    for i in range(30):
-        if i >= len(songs):
-            break
-        message += "\n{0}({1}) {2}".format(
-            songs[i][1]["name"], songs[i][1]["diffdiff"], songs[i][1]["acc"]
-        )
-        message += "power by Agnes4m & moe & Nonebot2"
+    # 图片输出
+    master_data = {"uid": md_uid, "name": await uid2name(md_uid), "ptt": ptt}
+    message_image = await b30_image(songs, master_data)
+    message = io.BytesIO()
+    message_image.save(message, format="PNG")
     return message
 
 
