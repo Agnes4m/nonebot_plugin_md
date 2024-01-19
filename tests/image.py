@@ -16,7 +16,7 @@ async def b30_image(
     draw = ImageDraw.Draw(template)
     font_large = ImageFont.truetype("simsun.ttc", 36)
     font_mid = ImageFont.truetype("simsun.ttc", 24)
-    # font_small = ImageFont.truetype("simsun.ttc", 24)
+    font_small = ImageFont.truetype("simsun.ttc", 24)
     # 定义每个小图像的大小和间隙大小
     image_width = 128  # 每个小图像的宽度
     image_height = 128  # 每个小图像的高度

@@ -1,7 +1,8 @@
 import requests as requests
 from lxml import etree
 import json
-import io
+
+# import io
 from fuzzywuzzy import fuzz, process
 from .message import (
     player_url,
@@ -14,7 +15,8 @@ from .message import (
 )
 from pathlib import Path
 from .utils import url_to_msg
-from .image import b30_image
+
+# from .image import b30_image
 
 data_path = Path("data/md_data")
 
@@ -89,26 +91,24 @@ async def b30(md_uid):
 
         songs[song]["acc"] = "{:.2%}".format(songs[song]["acc"])
         songs[song]["diffdiff"] = "{:.2f}".format(songs[song]["diffdiff"])
-    print(songs)
+    # print(songs)
     songs = sorted(songs.items(), key=lambda x: x[1]["ptt"], reverse=True)
-    print(songs)
     # 文字输出
-    # message = await uid2name(md_uid)
-    # message += "\n"
-    # message += ptt
-    # for i in range(30):
-    #     if i >= len(songs):
-    #         break
-    #     message += "\n{0}({1}) {2}".format(
-    #         songs[i][1]["name"], songs[i][1]["diffdiff"], songs[i][1]["acc"]
-    #     )
-    # message += "\npower by Agnes4m & moe & Nonebot2"
+    message = f"姓名:{await uid2name(md_uid)}"
+    message += "\n综合评分:{0}".format(ptt)
+    for i in range(30):
+        if i >= len(songs):
+            break
+        message += "\n{0}、{1}({2}) {3}".format(
+            i + 1, songs[i][1]["name"], songs[i][1]["diffdiff"], songs[i][1]["acc"]
+        )
+    message += "\npower by Agnes4m & moe & Nonebot2"
 
     # 图片输出
-    master_data = {"uid": md_uid, "name": await uid2name(md_uid), "ptt": ptt}
-    message_image = await b30_image(songs, master_data)
-    message = io.BytesIO()
-    message_image.save(message, format="PNG")
+    # master_data = {"uid": md_uid, "name": await uid2name(md_uid), "ptt": ptt}
+    # message_image = await b30_image(songs, master_data)
+    # message = io.BytesIO()
+    # message_image.save(message, format="PNG")
     return message
 
 

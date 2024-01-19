@@ -35,6 +35,12 @@ _✨游戏慕斯快跑(muse dash)查询✨_
 
 支持nonebot_plugin_saa所支持的所有适配器
 
+## 主要功能
+
+- 1. 初始化 发送`md update`
+- 2. 绑定 发送`md bindname xxx` 或者 `md binduid xxx`
+- 3. b30
+
 ## 安装
 
 以下提到的方法 任选**其一** 即可
@@ -44,7 +50,7 @@ _✨游戏慕斯快跑(muse dash)查询✨_
 在 nonebot2 项目的根目录下打开命令行, 输入以下指令即可安装
 
 ```bash
-nb plugin install nonebot-plugin-l4d2-server
+nb plugin install nonebot-plugin-md
 ```
 
 </details>
@@ -57,7 +63,7 @@ nb plugin install nonebot-plugin-l4d2-server
 <summary>pip</summary>
 
 ```bash
-pip install nonebot-plugin-l4d2-server
+pip install nonebot-plugin-md
 ```
 
 </details>
@@ -65,7 +71,7 @@ pip install nonebot-plugin-l4d2-server
 <summary>pdm</summary>
 
 ```bash
-pdm add nonebot-plugin-l4d2-server
+pdm add nonebot-plugin-md
 ```
 
 </details>
@@ -73,7 +79,7 @@ pdm add nonebot-plugin-l4d2-server
 <summary>poetry</summary>
 
 ```bash
-poetry add nonebot-plugin-l4d2-server
+poetry add nonebot-plugin-md
 ```
 
 </details>
@@ -81,21 +87,15 @@ poetry add nonebot-plugin-l4d2-server
 <summary>conda</summary>
 
 ```bash
-conda install nonebot-plugin-l4d2-server
+conda install nonebot-plugin-md
 ```
 
 </details>
 </details>
 
-## 主要功能
-
-- 1. 初始化 发送`md update`
-- 2. 绑定 发送`md bindname xxx` 或者 `md binduid xxx`
-- 3. b30
-
 ## 其他
 
-- 本人技术很差，如果您有发现BUG或者更好的建议，欢迎提Issue & Pr
+- 本项目原因是几乎找不到开源的md查询插件，因此自己做个开源的，欢迎大佬提iss和pr
 - 如果本插件对你有帮助，不要忘了点个Star~
 - 本项目仅供学习使用，请勿用于商业用途
 - [更新日志](./docs/update.md)
