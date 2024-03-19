@@ -355,8 +355,8 @@ async def mdbot(qq: str, message: str):
             return await b30(uid)
         else:
             return "找不到捏，可能是没绑，试试/md help"
-    if message_chars[1] == "b30name":
-        md_name, md_uid, success = await name2uid(message_chars[2])
+    if message_chars[0] == "b30name":
+        md_name, md_uid, success = await name2uid(message_chars[1])
         if md_uid != "":
             return await b30(md_uid)
     if message_chars[0] == "dif":

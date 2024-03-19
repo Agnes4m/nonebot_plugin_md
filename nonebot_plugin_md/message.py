@@ -1,5 +1,8 @@
 json_path = "data/md_data/players.json"
-help_message = """/md update:更新曲库及难度表，首次使用需要更新
+help_message = """慕斯快跑b30帮助菜单
+
+    /md help呼出此菜单
+    /md update:更新曲库及难度表，首次使用需要更新
     /md bindname 名字:使用指定名字账号与当前qq进行绑定，搜索结果不唯一时无法绑定
     /md binduid uid:使用指定uid与当前qq进行绑定\n"
     /md unbind:解除当前qq账号绑定
