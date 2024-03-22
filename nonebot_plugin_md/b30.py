@@ -1,4 +1,3 @@
-import requests as requests
 from lxml import etree
 import json
 
