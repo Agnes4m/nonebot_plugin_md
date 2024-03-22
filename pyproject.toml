@@ -1,6 +1,6 @@
 [project]
 name = "nonebot_plugin_md"
-version = "0.1.0"
+version = "0.1.2"
 description = "muse dash for nonebot2"
 authors = [
     {name = "Agnes Digital", email = "Z735803792@163.com"},

@@ -8,7 +8,7 @@ from .config import ConfigModel  # noqa: E402
 
 __version__ = "0.1.0"
 __plugin_meta__ = PluginMetadata(
-    name="Sekai Stickers",
+    name="Muse Dash",
     description="基于 NoneBot2 的 MUSE DASH查询插件",
     usage="",
     type="application",
