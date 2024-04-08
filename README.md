@@ -50,7 +50,7 @@ _✨游戏慕斯快跑(muse dash)查询✨_
 在 nonebot2 项目的根目录下打开命令行, 输入以下指令即可安装
 
 ```bash
-nb plugin install nonebot-plugin-md
+nb plugin install nonebot_plugin_md
 ```
 
 </details>
