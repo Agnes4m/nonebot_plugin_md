@@ -6,4 +6,4 @@ class ConfigModel(BaseModel):
     is_b30: bool = True
 
 
-config: ConfigModel = ConfigModel.parse_obj(get_driver().config.dict())
+config: ConfigModel = ConfigModel.model_validate(get_driver().config.model_dump())

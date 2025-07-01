@@ -1,12 +1,15 @@
-from PIL import Image, ImageDraw, ImageFont
 import asyncio
-from typing import List, Tuple, Dict
-from .utils import url_to_byte
 import io
+from typing import Dict, List, Tuple
+
+from PIL import Image, ImageDraw, ImageFont
+
+from .utils import url_to_byte
 
 
 async def b30_image(
-    data: List[Tuple[int, Dict[str, str]]], master_data: Dict[str, str]
+    data: List[Tuple[int, Dict[str, str]]],
+    master_data: Dict[str, str],
 ):
     # 创建一个空白模板图像，指定大小和背景颜色
     template_width = 1200  # 模板图像宽度
@@ -31,7 +34,7 @@ async def b30_image(
                 rank += 1
                 _, select_one = data[i * 6 + j]
                 image_pic = Image.open(
-                    io.BytesIO(await url_to_byte(select_one["pic"]))
+                    io.BytesIO(await url_to_byte(select_one["pic"])),
                 ).resize((128, 128))
                 # 测试代码
                 # image_pic = Image.open(data[rank][-1]["pic"]).resize((128, 128))

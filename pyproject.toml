@@ -1,13 +1,13 @@
 [project]
 name = "nonebot_plugin_md"
-version = "0.1.2"
+dynamic = ["version"]
 description = "muse dash for nonebot2"
 authors = [
     {name = "Agnes Digital", email = "Z735803792@163.com"},
 ]
 dependencies = [
     "nonebot2>=2.1.1",
-    "nonebot-plugin-send-anything-anywhere>=0.3.2",
+    "nonebot-plugin-alconna>=0.58.5",
     "aiohttp>=3.8.1",
     "fuzzywuzzy>=0.18.0",
     "lxml>=4.9.1"
@@ -26,6 +26,75 @@ classifiers = [
 readme = "README.md"
 license = {text = "AGPL-3.0"}
 
+[project.urls]
+homepage = "https://github.com/Agnes4m/nonebot_plugin_md"
+
+[tool.pdm.build]
+includes = []
+
+[tool.pdm.version]
+source = "file"
+path = "nonebot_plugin_md/__init__.py"
+
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
+
+[tool.pyright]
+pythonVersion = "3.9"
+
+[tool.black]
+line-length = 89
+target-version = ["py39", "py310", "py311","py312"]
+include = '\.pyi?$'
+# skip-string-normalization = true
+
+[tool.ruff.lint.isort]
+extra-standard-library = ["typing_extensions"]
+
+[tool.ruff.lint]
+ignore = [
+    "B008",
+    "B905",
+    "E402",
+    "E501",
+    "FBT001",
+    "FBT002",
+    "FBT003",
+    "PGH003",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "RUF006",
+    "RUF100",
+    "TRY002",
+    "TRY003",
+
+]
+select = [
+    "A",
+    "ARG",
+    "ASYNC",
+    "B",
+    "C4",
+    "COM",
+    "E",
+    "F",
+    "FBT",
+    "FLY",
+    "I",
+    "ISC",
+    "N",
+    "PIE",
+    "PGH",
+    "PTH",
+    "PYI",
+    "Q",
+    "RET",
+    "RSE",
+    "RUF",
+    "SIM",
+    "SLF",
+    "SLOT",
+    "TRY",
+]

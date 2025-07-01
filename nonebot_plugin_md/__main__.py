@@ -1,8 +1,9 @@
 from nonebot import on_command
+from nonebot.adapters import Event, Message
 from nonebot.matcher import Matcher
 from nonebot.params import CommandArg
-from nonebot.adapters import Event, Message
-from nonebot_plugin_saa import Image, MessageFactory
+from nonebot_plugin_alconna import UniMessage
+
 from .b30 import mdbot
 from .config import config
 
@@ -22,7 +23,7 @@ async def _(
     if isinstance(msg, str):
         await matcher.finish(msg)
     else:
-        await MessageFactory([Image(msg)]).send()
+        await UniMessage.image(raw=msg).send()
 
 
 @b30.handle()
@@ -37,4 +38,4 @@ async def _(
     if isinstance(msg, str):
         await matcher.finish(msg)
     else:
-        await MessageFactory([Image(msg)]).send()
+        await UniMessage.image(raw=msg).send()

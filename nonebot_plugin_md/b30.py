@@ -1,372 +1,277 @@
-from lxml import etree
+import asyncio
 import json
-
-# import io
-from fuzzywuzzy import fuzz, process
-from .message import (
-    player_url,
-    dif_url,
-    albums_url,
-    search_url,
-    json_path,
-    help_message,
-    base_url,
-)
 from pathlib import Path
-from .utils import url_to_msg
+from typing import Dict, Tuple
 
-# from .image import b30_image
+from fuzzywuzzy import fuzz, process
+from lxml import etree
+from nonebot.log import logger
+
+from .message import (
+    albums_url,
+    base_url,
+    dif_url,
+    help_message,
+    player_url,
+)
+from .utils import bindname, binduid, name2uid, repo, uid2name, unbind, url_to_msg
 
 data_path = Path("data/md_data")
 
-# //*[@id="app"]/section/div/div/div/nav[2]/div[1]/figure/img
-# //*[@id="app"]/section/div/div/div/nav[3]/div[1]/figure/img
-# /html/body/div/section/div/div/div/nav[2]/div[1]/figure/img
+
+async def parse_song_href(href: str) -> Tuple[str, int]:
+    parts = href.split("/")
+    return parts[2], int(parts[3])
 
 
-async def b30(md_uid):
-    # response = await url_to_msg(url='https://musedash.moe/player/86be39866f9911ebbc1d0242ac110039')
+def clean_text(text: str) -> str:
+    return text.replace(" ", "").replace("\n", "")
+
+
+async def b30(md_uid: str) -> str:
     response = await url_to_msg(url=player_url + md_uid)
     tree = etree.HTML(response)
-    spans = tree.xpath("/html/body/div/section/div/div/div//nav")  # 解析
-    ptt = tree.xpath(
-        '//*[@id="app"]/section/div/div/div/section/div/div/div[2]/div/div[1]/h1'
-    )[0].text
-    ptt = ptt.replace(" ", "")
-    ptt = ptt.replace("\n", "")
-    songs = {}
-    num = 1
-    for i in range(len(spans)):
-        if i == 0:
-            continue
 
-        song = spans[i].xpath("./div[4]/div/a[2]/@href")
+    ptt_element = tree.xpath(
+        '//*[@id="app"]/section/div/div/div/section/div/div/div[2]/div/div[1]/h1',
+    )
+    if not ptt_element:
+        return "无法解析玩家数据"
 
-        song_chars = song[0].split("/")
-        song_uid = song_chars[2]
-        song_dif = int(song_chars[3])
-        acc = spans[i].xpath("./div[3]/div/p[1]")
-        song_acc = float(acc[0].text[:-1]) / 100
+    ptt = clean_text(ptt_element[0].text)
+    songs = await parse_songs(tree, await repo.get_musics())
 
-        break_flag = False
-        for song in songs:
-            if songs[song]["uid"] == song_uid and songs[song]["dif"] == song_dif:
-                break_flag = True
-                if song_acc > songs[song]["acc"]:
-                    songs[song]["acc"] = song_acc
-                break
+    message = f"姓名:{await uid2name(md_uid)}\n综合评分:{ptt}"
+    for i, (_, song) in enumerate(songs.items(), 1):
+        message += f"\n{i}、{song['name']}({song['diffdiff']}) {song['acc']}"
 
-        if break_flag:
-            continue
-
-        info = {}
-        info["uid"] = song_uid
-        info["dif"] = song_dif
-        info["acc"] = song_acc
-        info["ptt"] = 0
-        pic = tree.xpath(
-            f"/html/body/div/section/div/div/div/nav[{i+1}]/div[1]/figure/img"
-        )[0].get("src")
-        pic_url = base_url + pic
-        info["pic"] = pic_url
-        songs[num] = info
-        num += 1
-
-    with open(data_path.joinpath("musics.json"), "rb") as f:
-        music_data = json.load(f)
-
-    for song in songs:
-        songs[song]["diffdiff"] = music_data[songs[song]["uid"]]["diffdiff"][
-            songs[song]["dif"]
-        ]
-        songs[song]["ptt"] = (
-            music_data[songs[song]["uid"]]["diffdiff"][songs[song]["dif"]]
-            * songs[song]["acc"]
-        )
-        songs[song]["dif"] = music_data[songs[song]["uid"]]["difficulty"][
-            songs[song]["dif"]
-        ]
-        songs[song]["name"] = music_data[songs[song]["uid"]]["ChineseS"]["name"]
-
-        songs[song]["acc"] = "{:.2%}".format(songs[song]["acc"])
-        songs[song]["diffdiff"] = "{:.2f}".format(songs[song]["diffdiff"])
-    # print(songs)
-    songs = sorted(songs.items(), key=lambda x: x[1]["ptt"], reverse=True)
-    # 文字输出
-    message = f"姓名:{await uid2name(md_uid)}"
-    message += "\n综合评分:{0}".format(ptt)
-    for i in range(30):
-        if i >= len(songs):
-            break
-        message += "\n{0}、{1}({2}) {3}".format(
-            i + 1, songs[i][1]["name"], songs[i][1]["diffdiff"], songs[i][1]["acc"]
-        )
     message += "\npower by Agnes4m & moe & Nonebot2"
-
-    # 图片输出
-    # master_data = {"uid": md_uid, "name": await uid2name(md_uid), "ptt": ptt}
-    # message_image = await b30_image(songs, master_data)
-    # message = io.BytesIO()
-    # message_image.save(message, format="PNG")
     return message
 
 
-async def name2uid(name):
-    response = await url_to_msg(url=search_url + name)
-    players = json.loads(response)
+async def parse_songs(tree: etree._Element, music_data: dict) -> Dict[int, dict]:
+    songs = {}
+    song_elements = tree.xpath('//nav[contains(@class, "song-item")]')
 
-    if len(players) == 0:
-        return "", "", False
-    else:
-        md_name = players[0][0]
-        md_uid = players[0][1]
-        if len(players) == 1:
-            return md_name, md_uid, True
-        else:
-            return md_name, md_uid, False
+    for i, element in enumerate(song_elements, 1):
+        try:
+            song_info = await extract_song_info(element, music_data)
+            songs[i] = song_info
+        except Exception as e:
+            logger.warning(f"Failed to parse song {i}: {e}")
 
-
-async def uid2name(uid):
-    response = await url_to_msg(url=player_url + uid)
-    tree = etree.HTML(response)
-    name = tree.xpath(
-        '//*[@id="app"]/section/div/div/div/section/div/div/div[1]/div/div[1]/h1'
-    )[0].text
-    return name[17 : len(name) - 15]
+    return dict(sorted(songs.items(), key=lambda x: x[1]["ptt"], reverse=True)[:30])
 
 
-async def qq2uid(qq):
-    player_data = {}
+async def extract_song_info(element: etree._Element, music_data: dict) -> dict:
+    href = element.xpath('.//a[@class="song-link"]/@href')[0]
+    song_uid, song_dif = await parse_song_href(href)
+
+    acc_text = element.xpath('.//p[@class="accuracy"]/text()')[0]
+    acc = float(acc_text.strip("%")) / 100
+
+    pic_url = base_url + element.xpath(".//img/@src")[0]
+
+    music = music_data[song_uid]
+    diff = music["diffdiff"][song_dif]
+
+    return {
+        "uid": song_uid,
+        "dif": music["difficulty"][song_dif],
+        "acc": f"{acc:.2%}",
+        "ptt": diff * acc,
+        "diffdiff": f"{diff:.2f}",
+        "name": music["ChineseS"]["name"],
+        "pic": pic_url,
+    }
+
+
+async def update_musics() -> bool:
     try:
-        with open(json_path, "rb") as f:
-            player_data = json.load(f)
+        data_path.mkdir(parents=True, exist_ok=True)
 
-    except Exception:
-        with open(json_path, "w") as f:
-            json.dump(player_data, f)
-
-    if qq in player_data:
-        return True, player_data[qq][1]
-    else:
-        return False, ""
-
-
-async def save_player(player_qq, player_name, player_uid):
-    player_info = []
-    player_info.append(player_name)
-    player_info.append(player_uid)
-
-    player_data = {}
-    try:
-        with open(json_path, "rb") as f:
-            player_data = json.load(f)
-
-    except Exception:
-        with open(json_path, "w") as f:
-            json.dump(player_data, f)
-
-    player_data[player_qq] = player_info
-    with open(json_path, "w") as f:
-        json.dump(player_data, f)
-
-
-async def bindname(qq, name):
-    md_name, md_uid, only_one = await name2uid(name)
-    if only_one:
-        await save_player(qq, md_name, md_uid)
-        return True, md_name
-    else:
-        return False, ""
-
-
-async def binduid(qq, uid):
-    name = uid2name(uid)
-    if name == "User not Found":
-        return False, name
-    save_player(qq, name, uid)
-    return True, name
-
-
-async def unbind(qq):
-    player_data = {}
-    try:
-        with open(json_path, "rb") as f:
-            player_data = json.load(f)
-
-    except Exception:
-        with open(json_path, "w") as f:
-            json.dump(player_data, f)
-
-    if qq in player_data:
-        name = player_data[qq][0]
-        del player_data[qq]
-        with open(json_path, "w") as f:
-            json.dump(player_data, f)
-
-        return True, name
-    else:
-        return False, ""
-
-
-async def update_musics():
-    data_path.mkdir(parents=True, exist_ok=True)
-
-    response = await url_to_msg(url=dif_url)
-    dif = json.loads(response)
-
-    response = await url_to_msg(url=albums_url)
-    albums = json.loads(response)
-
-    musics = {}
-    for album in albums:
-        for music in albums[album]["music"]:
-            musics[music] = albums[album]["music"][music]
-            musics[music]["diffdiff"] = [0, 0, 0, 0, 0]
-
-    for array in dif:
-        musics[array[0]]["diffdiff"][array[1]] = array[4]
-
-    level_dif = {}
-    for i in range(12):
-        level_dif[str(i + 1)] = {}
-    level_dif["?"] = {}
-    level_dif["¿"] = {}
-
-    chart_id = 1
-    for uid in musics:
-        for i in range(4):
-            if musics[uid]["difficulty"][i] != "0":
-                song = {}
-                song["name"] = musics[uid]["name"]
-                song["dif"] = musics[uid]["diffdiff"][i]
-                try:
-                    level_dif[musics[uid]["difficulty"][i]][chart_id] = song
-                except Exception:
-                    ...
-                chart_id += 1
-
-    for level in level_dif:
-        level_dif[level] = sorted(
-            level_dif[level].items(), key=lambda x: x[1]["dif"], reverse=True
+        dif_response, albums_response = await asyncio.gather(
+            url_to_msg(dif_url),
+            url_to_msg(albums_url),
         )
-        record = "Lv.{0}".format(level)
-        for song in level_dif[level]:
-            record += "\n{0}({1:.2f})".format(song[1]["name"], song[1]["dif"])
-        level_dif[level] = record
 
-    musics_names = []
-    for uid in musics:
-        musics_names.append(musics[uid]["name"])
+        musics = {}
+        for album in json.loads(albums_response).values():
+            for uid, music in album.get("music", {}).items():
+                musics[uid] = music
+                musics[uid]["diffdiff"] = [0.0] * 5
 
-    with open(data_path.joinpath("musics.json"), "w") as f:
-        json.dump(musics, f)
+        for entry in json.loads(dif_response):
+            musics[entry[0]]["diffdiff"][entry[1]] = entry[4]
 
-    with open(data_path.joinpath("dif.json"), "w") as f:
-        json.dump(level_dif, f)
+        level_dif = {str(i): {} for i in range(1, 13)}
+        level_dif.update({"?": {}, "¿": {}})
 
-    with open(data_path.joinpath("musics_name.json"), "w") as f:
-        json.dump(musics_names, f)
+        chart_id = 1
+        for _, music in musics.items():
+            for i, diff in enumerate(music["difficulty"]):
+                if diff != "0":
+                    level_dif[diff][chart_id] = {
+                        "name": music["name"],
+                        "dif": music["diffdiff"][i],
+                    }
+                    chart_id += 1
 
+        save_tasks = [
+            repo.save_musics(musics),
+            repo.save_dif_data(
+                {
+                    level: "Lv.{}\n{}".format(
+                        level,
+                        "\n".join(
+                            f"{s['name']}({s['dif']:.2f})"
+                            for s in sorted(
+                                songs.values(),
+                                key=lambda x: x["dif"],
+                                reverse=True,
+                            )
+                        ),
+                    )
+                    for level, songs in level_dif.items()
+                },
+            ),
+            repo.save_music_names([m["name"] for m in musics.values()]),
+        ]
 
-async def level_dif(level: str):
-    with open(data_path.joinpath("dif.json"), "rb") as f:
-        dif = json.load(f)
+        await asyncio.gather(*save_tasks)
 
-    if level in dif:
-        return dif[level]
-    else:
-        return "您玩的真的是暮色大师吗"
-
-
-async def song_info(name):
-    with open(data_path.joinpath("musics_name.json"), "rb") as f:
-        musics_name = json.load(f)
-
-    with open(data_path.joinpath("musics.json"), "rb") as f:
-        musics_data = json.load(f)
-
-    close_name = process.extractOne(name, musics_name, scorer=fuzz.token_sort_ratio)
-    if len(close_name) == 0:
-        return "找不到捏，再好好想想"
-
-    message = close_name[0]
-    for uid in musics_data:
-        if musics_data[uid]["name"] == close_name[0]:
-            message += "\n作者:{0}".format(musics_data[uid]["author"])
-            message += "\nbpm:{0}".format(musics_data[uid]["bpm"])
-            message += "\n难度:"
-            if musics_data[uid]["difficulty"][0] != "0":
-                message += "\n萌新:{0}({1:.2f})".format(
-                    musics_data[uid]["difficulty"][0], musics_data[uid]["diffdiff"][0]
-                )
-            if musics_data[uid]["difficulty"][1] != "0":
-                message += "\n高手:{0}({1:.2f})".format(
-                    musics_data[uid]["difficulty"][1], musics_data[uid]["diffdiff"][1]
-                )
-            if musics_data[uid]["difficulty"][2] != "0":
-                message += "\n大触:{0}({1:.2f})".format(
-                    musics_data[uid]["difficulty"][2], musics_data[uid]["diffdiff"][2]
-                )
-            if musics_data[uid]["difficulty"][3] != "0":
-                message += "\n里谱:{0}({1:.2f})".format(
-                    musics_data[uid]["difficulty"][3], musics_data[uid]["diffdiff"][3]
-                )
-            message += "\n谱师:"
-            for p in musics_data[uid]["levelDesigner"]:
-                if p is not None:
-                    message += "\n{0}".format(p)
-
-    return message
+    except Exception as e:
+        logger.error(f"Music data update failed: {e}")
+        return False
+    return True
 
 
-async def mdbot(qq: str, message: str):
-    # try:
-    message_chars = message.split(" ")
-    if len(message_chars) == 0:
+async def mdbot(qq: str, message: str) -> str:
+    message_chars = message.strip().split()
+    if not message_chars:
         return help_message
-    if message_chars[0] in ["帮助", "help"]:
-        return help_message
-    if message_chars[0] in ["更新", "update"]:
-        await update_musics()
-        return "更新完了"
-    if message_chars[0] in ["绑定", "bindname", "binduid"]:
-        success, name = await bindname(qq, message_chars[1])
-        print(success)
-        if success:
-            return "就你小子叫{0}({1})啊！".format(name, qq)
-        else:
-            return "找不到捏，试试用uid绑定"
-    if message_chars[0] in ["绑定uid", "binduid"]:
-        success, name = await binduid(qq, message_chars[1])
-        if success:
-            return "就你小子叫{0}({1})啊！".format(name, qq)
-        else:
-            return "你这uid有问题啊"
-    if message_chars[0] in ["解绑", "unbind"]:
-        success, name = await unbind(qq)
-        if success:
-            return "呜呜呜{0}({1})再见了".format(name, qq)
-        else:
-            return "找不到捏，可能是没绑，试试/md help"
-    if message_chars[0] == "b30":
-        success, uid = await qq2uid(qq)
-        if success:
-            return await b30(uid)
-        else:
-            return "找不到捏，可能是没绑，试试/md help"
-    if message_chars[0] == "b30name":
-        md_name, md_uid, success = await name2uid(message_chars[1])
-        if md_uid != "":
-            return await b30(md_uid)
-    if message_chars[0] == "dif":
-        return await level_dif(message_chars[1])
-    if message_chars[0] == "song":
-        return await song_info(message_chars[1])
-    if message_chars[0] == "test":
-        return "欸嘿！"
-    else:
-        return "您可真会玩!试试/md help"
+
+    cmd = message_chars[0].lower()
+
+    command_handlers = {
+        "帮助": lambda: help_message,
+        "help": lambda: help_message,
+        "更新": lambda: update_musics_wrapper(repo),
+        "update": lambda: update_musics_wrapper(repo),
+        "绑定": lambda: bind_wrapper(qq, message_chars),
+        "bindname": lambda: bind_wrapper(qq, message_chars),
+        "绑定uid": lambda: bind_uid_wrapper(qq, message_chars),
+        "binduid": lambda: bind_uid_wrapper(qq, message_chars),
+        "解绑": lambda: unbind_wrapper(qq),
+        "unbind": lambda: unbind_wrapper(qq),
+        "b30": lambda: b30_wrapper(qq),
+        "b30name": lambda: b30_name_wrapper(message_chars),
+        "dif": lambda: dif_wrapper(message_chars),
+        "song": lambda: song_info_wrapper(message_chars),
+        "test": lambda: "欸嘿！",
+    }
+
+    handler = command_handlers.get(cmd, lambda: "您可真会玩!试试/md help")
+    return await handler()
 
 
-# except Exception as E:
-#     return f"{E}出错了！试试/md help"
+async def update_musics_wrapper() -> str:
+    success = await update_musics(repo)
+    return "更新完了" if success else "更新失败"
+
+
+async def bind_wrapper(qq: str, message_chars: list) -> str:
+    if len(message_chars) < 2:
+        return "请输入要绑定的名称"
+    success, name = await bindname(qq, message_chars[1])
+    return f"就你小子叫{name}({qq})啊！" if success else "找不到捏，试试用uid绑定"
+
+
+async def bind_uid_wrapper(qq: str, message_chars: list) -> str:
+    if len(message_chars) < 2:
+        return "请输入要绑定的UID"
+    success, name = await binduid(qq, message_chars[1])
+    return f"就你小子叫{name}({qq})啊！" if success else "你这uid有问题啊"
+
+
+async def unbind_wrapper(qq: str) -> str:
+    success, name = await unbind(qq)
+    return (
+        f"呜呜呜{name}({qq})再见了" if success else "找不到捏，可能是没绑，试试/md help"
+    )
+
+
+async def b30_wrapper(qq: str) -> str:
+    try:
+        player_data = await repo.get_musics()
+        if qq not in player_data:
+            return "找不到捏，可能是没绑，试试/md help"
+        return await b30(player_data[qq][1])
+    except Exception as e:
+        logger.error(f"B30 query failed: {e}")
+        return "获取数据失败，请稍后再试"
+
+
+async def b30_name_wrapper(message_chars: list) -> str:
+    if len(message_chars) < 2:
+        return "请输入玩家名称"
+    md_name, md_uid, _ = await name2uid(message_chars[1])
+    return await b30(md_uid) if md_uid else "找不到该玩家"
+
+
+async def dif_wrapper(message_chars: list) -> str:
+    if len(message_chars) < 2:
+        return "请输入难度等级"
+    dif_data = await repo.get_dif_data()
+    return dif_data.get(message_chars[1], "您玩的真的是暮色大师吗")
+
+
+async def song_info_wrapper(message_chars: list) -> str:
+    if len(message_chars) < 2:
+        return "请输入歌曲名称"
+    return await song_info(message_chars[1])
+
+
+async def song_info(name: str) -> str:
+    try:
+        musics_names = await repo.get_music_names()
+        musics_data = await repo.get_musics()
+
+        close_name = process.extractOne(
+            name,
+            musics_names,
+            scorer=fuzz.token_sort_ratio,
+        )
+        if not close_name:
+            return "找不到捏，再好好想想"
+
+        for _, music in musics_data.items():
+            if music["name"] == close_name[0]:
+                return build_song_info_message(music)
+
+    except Exception as e:
+        logger.error(f"Song info query failed: {e}")
+        return "获取歌曲信息失败"
+    return "歌曲数据不完整"
+
+
+def build_song_info_message(music: dict) -> str:
+    message = [music["name"]]
+    message.append(f"作者:{music.get('author', '未知')}")
+    message.append(f"bpm:{music.get('bpm', '未知')}")
+
+    difficulties = []
+    for i, diff in enumerate(music["difficulty"]):
+        if diff != "0":
+            difficulties.append(
+                f"{['萌新','高手','大触','里谱'][i]}:{diff}({music['diffdiff'][i]:.2f)}",
+            )
+
+    if difficulties:
+        message.append("难度:\n" + "\n".join(difficulties))
+
+    designers = [d for d in music.get("levelDesigner", []) if d]
+    if designers:
+        message.append("谱师:\n" + "\n".join(designers))
+
+    return "\n".join(message)
