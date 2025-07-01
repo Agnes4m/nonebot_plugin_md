@@ -33,7 +33,7 @@ _✨游戏慕斯快跑(muse dash)查询✨_
 
 使用从MuseDash.moe摸来的数据及api开发的喵斯查分bot，可以实现绑定qq和md账号、查询b30、查询曲目信息、查询难度排行等功能
 
-支持nonebot_plugin_saa所支持的所有适配器
+支持nonebot_plugin_alconna所支持的所有适配器
 
 ## 主要功能
 
