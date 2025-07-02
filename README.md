@@ -11,25 +11,30 @@
 
 _✨游戏慕斯快跑(muse dash)查询✨_
 
+
+<img src="https://img.shields.io/badge/python-3.9+-blue?logo=python&logoColor=edb641" alt="python">
 <a href ="LICENSE"> 
 <img src="https://img.shields.io/github/license/Agnes4m/nonebot_plugin_md">
-<a href="https://github.com/Agnes4m/nonebot_plugin_md"><img src="https://img.shields.io/github/stars/Agnes4m/nonebot_plugin_md.svg?style=flat-square&
-label=Stars" alt="stars"></a>
-<a href="https://github.com/Agnes4m/nonebot_plugin_md/issues">
-        <img src="https://img.shields.io/github/issues/Agnes4m/nonebot_plugin_md" alt="GitHub issues">
 </a>
+<img src="https://img.shields.io/badge/nonebot-2.1.0+-red.svg" alt="NoneBot">
+<a href="https://pypi.python.org/pypi/nonebot_plugin_md">
+<img src="https://img.shields.io/pypi/v/nonebot_plugin_md?logo=python&logoColor=edb641" alt="python">
+</a>
+</br>
+  <a href="https://github.com/astral-sh/ruff">
+    <img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/charliermarsh/ruff/main/assets/badge/v2.json" alt="ruff">
+  </a>
+  <a href="https://github.com/psf/black">
+    <img src="https://img.shields.io/badge/code%20style-black-000000.svg?logo=python&logoColor=edb641" alt="black">
+  </a>
+
+<img src="https://img.shields.io/badge/alconna-0.58.3+-red.svg" alt="NoneBot">    
+
 </br>
 <a href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0u2VnosCsDG05IPlQ4SvhCTVLpWqyEqZ&authKey=zEfR1qR358aH4bksKXMwns3nNd1r395ignXLDExp2xG8ENaIzgrAd6%2FRRAo%2B8QR2&noverify=0&group_code=424506063">
         <img src="https://img.shields.io/badge/QQ%E7%BE%A4-424506063-orange?style=flat-square" alt="QQ Chat Group">
 </a>
-<a href="https://pypi.python.org/pypi/nonebot_plugin_md">
-        <img src="https://img.shields.io/pypi/v/nonebot_plugin_md.svg" alt="pypi">
-<a href="https://codecov.io/gh/Agnes4m/nonebot_plugin_md"><img src="https://img.shields.io/codecov/c/github/Agnes4m/nonebot_plugin_md" alt="stars"></a>
 
-</a>
-    <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="python">
-    <img src="https://img.shields.io/badge/nonebot-2.1.0+-red.svg" alt="NoneBot">
-    <img src="https://img.shields.io/badge/alconna-0.58.3+-red.svg" alt="NoneBot">    
 </div>
 
 ## 说明
@@ -45,6 +50,29 @@ label=Stars" alt="stars"></a>
 - 1. 初始化 发送`md update`
 - 2. 绑定 发送`md bindname xxx` 或者 `md binduid xxx`
 - 3. b30
+
+## 使用
+
+```base
+/md help呼出此菜单
+/md b30:查询当前qq绑定账号b30
+/md update:更新曲库及难度表，首次使用需要更新
+/md binduid uid:使用指定uid与当前qq进行绑定\n"
+
+/md bindname 名字:使用指定名字账号与当前qq进行绑定，搜索结果不唯一时无法绑定
+/md unbind:解除当前qq账号绑定
+/md b30name 名字:查询指定名字账号b30，搜索结果不唯一时返回第一个结果
+/md dif 等级:查询指定等级难度排行
+/md song 曲目名称:查询指定歌曲信息，支持模糊匹配
+```
+
+## 配置(env)
+
+```env
+# 启用b30快捷指令
+is_b30=true
+```
+
 
 ## 安装
 

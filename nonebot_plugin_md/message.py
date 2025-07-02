@@ -10,8 +10,7 @@ help_message = """慕斯快跑b30帮助菜单
     /md b30name 名字:查询指定名字账号b30，搜索结果不唯一时返回第一个结果
     /md dif 等级:查询指定等级难度排行
     /md song 曲目名称:查询指定歌曲信息，支持模糊匹配
-    数据来源：MuseDash.moe
-    by AgnesDigital & Nonebot2"""
+    """
 
 base_url = "https://musedash.moe"
 dif_url = "https://api.musedash.moe/diffdiff"
