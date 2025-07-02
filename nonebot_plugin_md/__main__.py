@@ -7,35 +7,36 @@ from nonebot_plugin_alconna import UniMessage
 from .b30 import mdbot
 from .config import config
 
+# 命令注册
 if config.is_b30:
     b30 = on_command("b30", priority=1)
 cmd = on_command("md", priority=2)
 
 
+async def handle_command(
+    matcher: Matcher,
+    event: Event,
+    args: Message,
+    prefix: str = "",
+):
+    args_msg = prefix + args.extract_plain_text()
+    msg = await mdbot(event.get_user_id(), args_msg)
+
+    if isinstance(msg, str):
+        await matcher.finish(msg)
+    else:
+        await UniMessage.image(raw=msg).send()
+
+
 @cmd.handle()
-async def _(
-    matcher: Matcher,
-    event: Event,
-    args: Message = CommandArg(),
-):
-    args_msg = args.extract_plain_text()
-    msg = await mdbot(event.get_user_id(), args_msg)
-    if isinstance(msg, str):
-        await matcher.finish(msg)
-    else:
-        await UniMessage.image(raw=msg).send()
+async def handle_md(matcher: Matcher, event: Event, args: Message = CommandArg()):
+    """处理md命令"""
+    await handle_command(matcher, event, args)
 
 
-@b30.handle()
-async def _(
-    matcher: Matcher,
-    event: Event,
-    args: Message = CommandArg(),
-):
-    args_msg = args.extract_plain_text()
-    args_msg = "b30" + args_msg
-    msg = await mdbot(event.get_user_id(), args_msg)
-    if isinstance(msg, str):
-        await matcher.finish(msg)
-    else:
-        await UniMessage.image(raw=msg).send()
+if config.is_b30:
+
+    @b30.handle()
+    async def handle_b30(matcher: Matcher, event: Event, args: Message = CommandArg()):
+        """处理b30命令"""
+        await handle_command(matcher, event, args, "b30")

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>MuseDash B30 成绩单</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FF6B9D;
+            --secondary-color: #FF8CAD;
+            --background-color: #FFF5F8;
+            --card-bg: #FFFFFF;
+            --text-color: #333333;
+            --text-light: #666666;
+            --text-lighter: #999999;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 10px;
+            color: var(--text-color);
+        }
+        
+        .container {
+            width: 900px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .header h1 {
+            color: var(--primary-color);
+            margin: 0 0 5px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .score-container {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 3px 10px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        
+        .song-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+        
+        .song-card {
+            position: relative;
+            padding: 5px;
+            text-align: center;
+        }
+        
+        .song-cover-container {
+            position: relative;
+            width: 70px;
+            height: 70px;
+            margin: 0 auto;
+        }
+        
+        .song-cover {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .song-ptt {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            width: auto;
+            min-width: 24px;
+            height: 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 11px;
+            border: 1px solid white;
+            z-index: 2;
+            padding: 0 4px;
+        }
+        
+        .song-detail {
+            position: absolute;
+            font-size: 9px;
+            font-weight: 500;
+            padding: 1px 3px;
+            border-radius: 3px;
+            background: rgba(255,255,255,0.9);
+            min-width: 18px;
+            text-align: center;
+        }
+        
+        .difficulty {
+            top: -3px;
+            right: -3px;
+            background: #FFD166;
+            color: #7A5A00;
+        }
+        
+        .diffdiff {
+            bottom: -3px;
+            left: -3px;
+            background: #E3F2FD;
+            color: #0D47A1;
+        }
+        
+        .accuracy {
+            bottom: -3px;
+            right: -3px;
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+        
+        .song-title {
+            font-weight: 500;
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 10px;
+            color: var(--text-lighter);
+            font-size: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed #EEE;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{ player_name }} 的 B30 成绩单</h1>
+            <div class="score-container">
+                综合评分: {{ overall_ptt }}
+            </div>
+        </div>
+        
+        <div class="song-grid">
+            {% for rank, song in songs.items() %}
+            <div class="song-card">
+                <div class="song-cover-container">
+                    <div class="song-ptt">{{ "%.2f"|format(song.ptt) }}</div>
+                    <img class="song-cover" src="{{ song.pic }}" alt="{{ song.name }}" loading="lazy">
+                    <div class="song-detail difficulty">Lv.{{ song.dif }}</div>
+                    <div class="song-detail diffdiff">{{ "%.2f"|format(song.diffdiff) }}</div>
+                    <div class="song-detail accuracy">{{ (song.acc * 100)|round(1) }}%</div>
+                </div>
+                <div class="song-title" title="{{ song.name }}">{{ song.name }}</div>
+                <div class="song-title" title="总分">总分: {{ song.score }}</div>
+                <div class="song-title" title="角色">角色: {{ song.role }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <div class="footer">
+            Generated by MuseDash Bot | {{ timestamp }}
+        </div>
+    </div>
+</body>
+</html>

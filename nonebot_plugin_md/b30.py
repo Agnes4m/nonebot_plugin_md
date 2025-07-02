@@ -1,11 +1,13 @@
 import asyncio
 import json
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, Tuple
+from typing import Dict, Literal, Tuple, cast
 
 from fuzzywuzzy import fuzz, process
 from lxml import etree
 from nonebot.log import logger
+from nonebot_plugin_htmlrender import template_to_pic as t2p
 
 from .message import (
     albums_url,
@@ -14,7 +16,18 @@ from .message import (
     help_message,
     player_url,
 )
-from .utils import bindname, binduid, name2uid, repo, uid2name, unbind, url_to_msg
+from .model import SongInfo
+from .utils import (
+    bindname,
+    binduid,
+    find_existing_song,
+    name2uid,
+    repo,
+    uid2name,
+    unbind,
+    update_song_info,
+    url_to_msg,
+)
 
 data_path = Path("data/md_data")
 
@@ -28,7 +41,7 @@ def clean_text(text: str) -> str:
     return text.replace(" ", "").replace("\n", "")
 
 
-async def b30(md_uid: str) -> str:
+async def b30(md_uid: str, mode: Literal["img", "text"] = "img") -> str:
     response = await url_to_msg(url=player_url + md_uid)
     tree = etree.HTML(response)
 
@@ -40,50 +53,97 @@ async def b30(md_uid: str) -> str:
 
     ptt = clean_text(ptt_element[0].text)
     songs = await parse_songs(tree, await repo.get_musics())
+    logger.debug(songs)
+    if mode == "img":
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        return await t2p(
+            template_path=Path(__file__).parent / "template",
+            template_name="b30.html",
+            templates={
+                "songs": songs,
+                "player_name": await uid2name(md_uid),
+                "overall_ptt": ptt[1:-2],
+                "current_time": current_time,
+            },
+        )
 
     message = f"姓名:{await uid2name(md_uid)}\n综合评分:{ptt}"
     for i, (_, song) in enumerate(songs.items(), 1):
         message += f"\n{i}、{song['name']}({song['diffdiff']}) {song['acc']}"
 
-    message += "\npower by Agnes4m & moe & Nonebot2"
+    # message += "\npower by Agnes4m & moe & Nonebot2"
     return message
 
 
-async def parse_songs(tree: etree._Element, music_data: dict) -> Dict[int, dict]:
+async def parse_songs(tree: etree._Element, music_data: dict) -> Dict[int, SongInfo]:
     songs = {}
-    song_elements = tree.xpath('//nav[contains(@class, "song-item")]')
+    # spans = tree.xpath("/html/body/div/section/div/div/div//nav")
 
-    for i, element in enumerate(song_elements, 1):
+    song_elements = tree.xpath("/html/body/div/section/div/div/div//nav")
+    # with open("test.json", "w", encoding="utf-8") as f:
+    #     f.write(str(song_elements.text))
+
+    for i, element in enumerate(song_elements[1:], 1):
         try:
-            song_info = await extract_song_info(element, music_data)
-            songs[i] = song_info
+            # 提取歌曲链接
+            song_link = element.xpath("./div[4]/div/a[2]/@href")
+            if not song_link:
+                logger.debug(f"元素 {i} 中没有找到歌曲链接")
+                continue
+
+            # 解析UID和难度
+            song_uid, song_dif = await parse_song_href(song_link[0])
+
+            # 提取准确率, 总分和人物
+            acc_element = element.xpath("./div[3]/div/p[1]/text()")
+            if not acc_element:
+                logger.debug(f"元素 {i} 中没有找到准确率数据")
+                continue
+            acc = float(acc_element[0].strip("%")) / 100
+            song_socre = str(element.xpath("./div[3]/div/p[2]/text()")[0])
+            song_role = str(element.xpath("./div[3]/div/p[3]/text()")[0])
+
+            # 验证音乐数据
+            if song_uid not in music_data:
+                logger.warning(f"音乐UID {song_uid} 不在音乐数据中")
+                continue
+
+            music = music_data[song_uid]
+            diff = music["diffdiff"][song_dif]
+
+            song_info = {
+                "uid": song_uid,
+                "dif": music["difficulty"][song_dif],
+                "acc": acc,
+                "ptt": diff * acc,
+                "diffdiff": diff,
+                "name": music["ChineseS"]["name"],
+                "pic": (
+                    base_url + element.xpath(".//img/@src")[0]
+                    if element.xpath(".//img/@src")
+                    else ""
+                ),
+                "score": song_socre,
+                "role": song_role,
+            }
+            song_info = cast(SongInfo, song_info)
+
+            # 检查是否已有相同歌曲的更差记录
+            existing_song = find_existing_song(songs, song_info)
+            if existing_song:
+                if acc > existing_song["acc"]:
+                    update_song_info(existing_song, song_info)
+                continue
+
+            # 添加新歌曲
+            songs[len(songs) + 1] = song_info
+
         except Exception as e:
-            logger.warning(f"Failed to parse song {i}: {e}")
+            logger.warning(f"解析歌曲 {i} 失败: {e}")
+            continue
 
+    # 按PTT降序排序并取前30
     return dict(sorted(songs.items(), key=lambda x: x[1]["ptt"], reverse=True)[:30])
-
-
-async def extract_song_info(element: etree._Element, music_data: dict) -> dict:
-    href = element.xpath('.//a[@class="song-link"]/@href')[0]
-    song_uid, song_dif = await parse_song_href(href)
-
-    acc_text = element.xpath('.//p[@class="accuracy"]/text()')[0]
-    acc = float(acc_text.strip("%")) / 100
-
-    pic_url = base_url + element.xpath(".//img/@src")[0]
-
-    music = music_data[song_uid]
-    diff = music["diffdiff"][song_dif]
-
-    return {
-        "uid": song_uid,
-        "dif": music["difficulty"][song_dif],
-        "acc": f"{acc:.2%}",
-        "ptt": diff * acc,
-        "diffdiff": f"{diff:.2f}",
-        "name": music["ChineseS"]["name"],
-        "pic": pic_url,
-    }
 
 
 async def update_musics() -> bool:
@@ -202,14 +262,14 @@ async def unbind_wrapper(qq: str) -> str:
 
 
 async def b30_wrapper(qq: str) -> str:
-    try:
-        player_data = await repo.get_musics()
-        if qq not in player_data:
-            return "找不到捏，可能是没绑，试试/md help"
-        return await b30(player_data[qq][1])
-    except Exception as e:
-        logger.error(f"B30 query failed: {e}")
-        return "获取数据失败，请稍后再试"
+    # try:
+    player_data = await repo.get_musics()
+    if qq not in player_data:
+        return "找不到捏，可能是没绑，试试/md help"
+    return await b30(player_data[qq][1])
+    # except Exception as e:
+    #     logger.error(f"B30 query failed: {e}")
+    #     return "获取数据失败，请稍后再试"
 
 
 async def b30_name_wrapper(message_chars: list) -> str:

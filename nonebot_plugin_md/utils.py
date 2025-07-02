@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Tuple
+from typing import Optional, Tuple
 
 import aiofiles
 import aiohttp
@@ -8,6 +8,7 @@ from lxml import etree
 from nonebot.log import logger
 
 from .message import player_url, search_url
+from .model import SongInfo
 
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:107.0) Gecko/20100101 Firefox/107.0",  # noqa: E501
@@ -200,3 +201,17 @@ async def unbind(qq: str, repo: MusicDataRepository) -> Tuple[bool, str]:
 
     success = await repo.save_musics(player_data)
     return success, name if success else "解绑失败"
+
+
+def find_existing_song(songs: dict, new_song: SongInfo) -> Optional[dict]:
+    """检查是否已有相同歌曲的记录"""
+    for song in songs.values():
+        if song["uid"] == new_song["uid"] and song["dif"] == new_song["dif"]:
+            return song
+    return None
+
+
+def update_song_info(existing_song: dict, new_song: SongInfo):
+    """更新已有歌曲信息"""
+    existing_song["acc"] = new_song["acc"]
+    existing_song["ptt"] = new_song["ptt"]
