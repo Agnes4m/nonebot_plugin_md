@@ -18,16 +18,14 @@ label=Stars" alt="stars"></a>
 <a href="https://github.com/Agnes4m/nonebot_plugin_md/issues">
         <img src="https://img.shields.io/github/issues/Agnes4m/nonebot_plugin_md" alt="GitHub issues">
 </a>
+</br>
 <a href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0u2VnosCsDG05IPlQ4SvhCTVLpWqyEqZ&authKey=zEfR1qR358aH4bksKXMwns3nNd1r395ignXLDExp2xG8ENaIzgrAd6%2FRRAo%2B8QR2&noverify=0&group_code=424506063">
         <img src="https://img.shields.io/badge/QQ%E7%BE%A4-424506063-orange?style=flat-square" alt="QQ Chat Group">
 </a>
 <a href="https://pypi.python.org/pypi/nonebot_plugin_md">
         <img src="https://img.shields.io/pypi/v/nonebot_plugin_md.svg" alt="pypi">
-
 <a href="https://codecov.io/gh/Agnes4m/nonebot_plugin_md"><img src="https://img.shields.io/codecov/c/github/Agnes4m/nonebot_plugin_md" alt="stars"></a>
 
-
-()]()
 </a>
     <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="python">
     <img src="https://img.shields.io/badge/nonebot-2.1.0+-red.svg" alt="NoneBot">
