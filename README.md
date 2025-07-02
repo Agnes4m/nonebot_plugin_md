@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD026 MD031 MD033 MD036 MD041 MD046 MD047 MD051 -->
 <div align="center">
-  <img src="https://raw.githubusercontent.com/Agnes4m/nonebot_plugin_md/main/img/logo.png" width="180" height="180"  alt="AgnesDigitalLogo">
+  <img src="./img/logo.png" width="180" height="180"  alt="AgnesDigitalLogo">
   <br>
   <p><img src="https://s2.loli.net/2022/06/16/xsVUGRrkbn1ljTD.png" width="240" alt="NoneBotPluginText"></p>
 </div>
@@ -11,11 +11,12 @@
 
 _✨游戏慕斯快跑(muse dash)查询✨_
 
-<a href="https://github.com/Agnes4m/nonebot_plugin_md/stargazers">
-        <img alt="GitHub stars" src="https://img.shields.io/github/stars/Agnes4m/nonebot_plugin_md" alt="stars">
-</a>
+<a href ="LICENSE"> 
+<img src="https://img.shields.io/github/license/Agnes4m/nonebot_plugin_md">
+<a href="https://github.com/Agnes4m/nonebot_plugin_md"><img src="https://img.shields.io/github/stars/Agnes4m/nonebot_plugin_md.svg?style=flat-square&
+label=Stars" alt="stars"></a>
 <a href="https://github.com/Agnes4m/nonebot_plugin_md/issues">
-        <img alt="GitHub issues" src="https://img.shields.io/github/issues/Agnes4m/nonebot_plugin_md" alt="issues">
+        <img src="https://img.shields.io/github/issues/Agnes4m/nonebot_plugin_md" alt="GitHub issues">
 </a>
 <a href="http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0u2VnosCsDG05IPlQ4SvhCTVLpWqyEqZ&authKey=zEfR1qR358aH4bksKXMwns3nNd1r395ignXLDExp2xG8ENaIzgrAd6%2FRRAo%2B8QR2&noverify=0&group_code=424506063">
         <img src="https://img.shields.io/badge/QQ%E7%BE%A4-424506063-orange?style=flat-square" alt="QQ Chat Group">
@@ -23,17 +24,23 @@ _✨游戏慕斯快跑(muse dash)查询✨_
 <a href="https://pypi.python.org/pypi/nonebot_plugin_md">
         <img src="https://img.shields.io/pypi/v/nonebot_plugin_md.svg" alt="pypi">
 
+<a href="https://codecov.io/gh/Agnes4m/nonebot_plugin_md"><img src="https://img.shields.io/codecov/c/github/Agnes4m/nonebot_plugin_md" alt="stars"></a>
+
+
+()]()
 </a>
     <img src="https://img.shields.io/badge/python-3.9+-blue.svg" alt="python">
     <img src="https://img.shields.io/badge/nonebot-2.1.0+-red.svg" alt="NoneBot">
-
+    <img src="https://img.shields.io/badge/alconna-0.58.3+-red.svg" alt="NoneBot">    
 </div>
 
 ## 说明
 
 使用从MuseDash.moe摸来的数据及api开发的喵斯查分bot，可以实现绑定qq和md账号、查询b30、查询曲目信息、查询难度排行等功能
 
-支持nonebot_plugin_alconna所支持的所有适配器
+### 截图展示
+
+![b30](./img/QQ20250702-113730.png)
 
 ## 主要功能
 
