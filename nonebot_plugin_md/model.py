@@ -14,7 +14,8 @@ class SongInfo(BaseModel):
     name: str = Field(..., description="歌曲名称")
     pic: Optional[str] = Field(None, description="歌曲封面URL")
     score: str = Field(..., description="分数")
-    role: str = Field(..., description="歌曲使用角色")
+    role: str = Field(..., description="歌曲使用搭档")
+    pat: str = Field(..., description="歌曲使用宠物")
 
     @property
     def formatted_acc(self) -> str:

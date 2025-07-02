@@ -7,7 +7,6 @@ from nonebot_plugin_alconna import UniMessage
 from .b30 import mdbot
 from .config import config
 
-# 命令注册
 if config.is_b30:
     b30 = on_command("b30", priority=1)
 cmd = on_command("md", priority=2)

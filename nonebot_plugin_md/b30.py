@@ -2,7 +2,7 @@ import asyncio
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Literal, Tuple, cast
+from typing import Dict, Tuple, cast
 
 from fuzzywuzzy import fuzz, process
 from lxml import etree
@@ -41,7 +41,7 @@ def clean_text(text: str) -> str:
     return text.replace(" ", "").replace("\n", "")
 
 
-async def b30(md_uid: str, mode: Literal["img", "text"] = "img") -> str:
+async def b30(md_uid: str) -> bytes:
     response = await url_to_msg(url=player_url + md_uid)
     tree = etree.HTML(response)
 
@@ -54,44 +54,29 @@ async def b30(md_uid: str, mode: Literal["img", "text"] = "img") -> str:
     ptt = clean_text(ptt_element[0].text)
     songs = await parse_songs(tree, await repo.get_musics())
     logger.debug(songs)
-    if mode == "img":
-        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        return await t2p(
-            template_path=Path(__file__).parent / "template",
-            template_name="b30.html",
-            templates={
-                "songs": songs,
-                "player_name": await uid2name(md_uid),
-                "overall_ptt": ptt[1:-2],
-                "current_time": current_time,
-            },
-        )
-
-    message = f"姓名:{await uid2name(md_uid)}\n综合评分:{ptt}"
-    for i, (_, song) in enumerate(songs.items(), 1):
-        message += f"\n{i}、{song['name']}({song['diffdiff']}) {song['acc']}"
-
-    # message += "\npower by Agnes4m & moe & Nonebot2"
-    return message
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return await t2p(
+        template_path=Path(__file__).parent / "template",
+        template_name="b30.html",
+        templates={
+            "songs": songs,
+            "player_name": await uid2name(md_uid),
+            "overall_ptt": ptt[1:-2],
+            "current_time": current_time,
+        },
+    )
 
 
 async def parse_songs(tree: etree._Element, music_data: dict) -> Dict[int, SongInfo]:
     songs = {}
-    # spans = tree.xpath("/html/body/div/section/div/div/div//nav")
-
     song_elements = tree.xpath("/html/body/div/section/div/div/div//nav")
-    # with open("test.json", "w", encoding="utf-8") as f:
-    #     f.write(str(song_elements.text))
 
     for i, element in enumerate(song_elements[1:], 1):
         try:
             # 提取歌曲链接
             song_link = element.xpath("./div[4]/div/a[2]/@href")
             if not song_link:
-                logger.debug(f"元素 {i} 中没有找到歌曲链接")
                 continue
-
-            # 解析UID和难度
             song_uid, song_dif = await parse_song_href(song_link[0])
 
             # 提取准确率, 总分和人物
@@ -101,11 +86,12 @@ async def parse_songs(tree: etree._Element, music_data: dict) -> Dict[int, SongI
                 continue
             acc = float(acc_element[0].strip("%")) / 100
             song_socre = str(element.xpath("./div[3]/div/p[2]/text()")[0])
-            song_role = str(element.xpath("./div[3]/div/p[3]/text()")[0])
+            song_pat, song_role = (
+                str(element.xpath("./div[3]/div/p[3]/text()")[0])
+            ).split("/")
 
             # 验证音乐数据
             if song_uid not in music_data:
-                logger.warning(f"音乐UID {song_uid} 不在音乐数据中")
                 continue
 
             music = music_data[song_uid]
@@ -125,17 +111,16 @@ async def parse_songs(tree: etree._Element, music_data: dict) -> Dict[int, SongI
                 ),
                 "score": song_socre,
                 "role": song_role,
+                "pat": song_pat,
             }
             song_info = cast(SongInfo, song_info)
 
-            # 检查是否已有相同歌曲的更差记录
             existing_song = find_existing_song(songs, song_info)
             if existing_song:
                 if acc > existing_song["acc"]:
                     update_song_info(existing_song, song_info)
                 continue
 
-            # 添加新歌曲
             songs[len(songs) + 1] = song_info
 
         except Exception as e:

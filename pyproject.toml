@@ -8,6 +8,7 @@ authors = [
 dependencies = [
     "nonebot2>=2.1.1",
     "nonebot-plugin-alconna>=0.58.5",
+    "nonebot_plugin_htmlrender>=0.6.3",
     "aiohttp>=3.8.1",
     "fuzzywuzzy>=0.18.0",
     "lxml>=4.9.1"
