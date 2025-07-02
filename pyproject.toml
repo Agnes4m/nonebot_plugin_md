@@ -54,6 +54,9 @@ include = '\.pyi?$'
 [tool.ruff.lint.isort]
 extra-standard-library = ["typing_extensions"]
 
+[tool.pytest.ini_options]
+addopts = "--cov=nonebot_plugin_md --cov-report=xml"
+
 [tool.ruff.lint]
 ignore = [
     "B008",

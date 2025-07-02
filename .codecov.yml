@@ -1,0 +1,9 @@
+codecov:
+  token:${{ secrets.CODECOV_TOKEN }}
+  branch: master
+  flags:
+    - ci
+  coverage:
+    status: all
+    target: 100%
+    precision: 2
